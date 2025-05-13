@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sklep</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <div class="container mt-5">
+        <h2>Zamówienia</h2>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Data zatwierdzenia</th>
+              <th>Wartość</th>
+              <th>Produkty</th>
+              <th>Status</th>
+              <th>Akcje</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (zamowienia && zamowienia.length > 0) { %>
+              <% zamowienia.forEach(zamowienie => { %>
+                <tr id="zamowienie<%= zamowienie.id_zamowienia %>">
+                  <td><%= zamowienie.data_zatwierdzenia %></td>
+                  <td id="wartosc<%= zamowienie.id_zamowienia %>">Ładowanie...</td> <!-- Miejsce na wartość -->
+                  <td>
+                    <% if (zamowienie.orderItems && zamowienie.orderItems.length > 0) { %>
+                        <ul>
+                            <% zamowienie.orderItems.forEach(pozycja => { %>
+                              <li id="zamowienie<%= zamowienie.id_zamowienia %>produkt<%= pozycja.id_produktu %>">
+                                Ładowanie...
+                              </li>
+                            <% }); %>
+                          </ul>
+                    <% } else { %>
+                      Brak produktów
+                    <% } %>
+                  </td>
+                  <td id="status<%= zamowienie.id_zamowienia %>"><%= zamowienie.status.nazwa %></td>
+                  <td>
+                    <button class="btn btn-success" onclick="zmienStatus(<%= zamowienie.id_zamowienia %>, 'zrealizowane')">Zrealizowane</button>
+                    <button class="btn btn-danger" onclick="zmienStatus(<%= zamowienie.id_zamowienia %>, 'anulowane')">Anulowane</button>
+                  </td>
+                </tr>
+
+              <% }); %>
+            <% } else { %>
+              <tr>
+                <td colspan="6">Brak zamowień w sklepie</td>
+              </tr>
+            <% } %>
+          </tbody>
+          
+        </table>
+      </div>
+    
+
+      <script src="../js/orders_values.js"></script>
+</body>
+</html>

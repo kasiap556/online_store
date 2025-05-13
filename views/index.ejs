@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sklep</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>Witaj!</h1>
+
+        <div class="mb-3">
+            <input type="text" id="searchInput" class="form-control" placeholder="Szukaj produktów...">
+        </div>
+        
+        <div class="mb-3">
+            <select id="categoryFilter" class="form-select">
+                <option value="">Wybierz kategorię</option>
+                <option value="1">Bez kategorii</option>
+                <option value="2">Bez kategorii2</option>
+            </select>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-md-8">
+                <table class="table" id="productTable">
+                    <thead>
+                        <tr>
+                            <th>Nazwa</th>
+                            <th>Opis</th>
+                            <th>Cena</th>
+                            <th>Waga</th>
+                            <th>Kategoria</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (produkty && produkty.length > 0) { %>
+                            <% produkty.forEach(produkt => { %>
+                                <tr id="product<%= produkt.id_produktu %>">
+                                    <td><%= produkt.nazwa %></td>
+                                    <td><%= produkt.opis %></td>
+                                    <td><%= produkt.cena_jednostkowa %> PLN</td>
+                                    <td><%= produkt.waga_jednostkowa %> kg</td>
+                                    <td><%= kategorie.find(k => k.id_kategorii === produkt.id_kategorii)?.nazwa || 'Brak kategorii' %></td>
+                                    <td>
+                                        <button onclick="addToCart(<%= produkt.id_produktu %>)" class="btn btn-primary">Dodaj do koszyka</button>
+                                    </td>
+									<td>
+										<button onclick="optimizeDescription(<%= produkt.id_produktu %>)" class="btn btn-success">Optymalizuj</button>
+									</td>
+									<td>
+                                        <button onclick="editProduct(<%= produkt.id_produktu %>)" class="btn btn-warning">Edytuj</button>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="6">Brak produktów w sklepie</td>
+                            </tr>
+							<tr>
+								 <form id="fileForm">
+									<div class="input-group">
+										<input type="file" id="fileInput" accept=".json" class="form-control" />
+										<button type="button" onclick="initializeDatabase()" class="btn btn-primary">Załaduj plik</button>
+									</div>
+								</form>
+							</tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="col-md-4">
+                <h2>Koszyk</h2>
+                <ul id="cart-items" class="list-group">
+                    <!-- Elementy koszyka -->
+                </ul>
+                <h3 id="total-price">Łączna cena: 0 PLN</h3>
+                <button id="clear-cart" onclick="deleteCart()" class="btn btn-danger">Wyczyść koszyk</button>
+                <button id="order-cart" onclick="orderCart()" class="btn btn-success">Zamów</button>
+            </div>
+        </div>
+		
+
+		
+    </div>
+
+	<div class="modal fade" id="editProductModal" tabindex="-1" aria-labelledby="editProductModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editProductModalLabel">Edytuj Produkt</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editProductForm">
+						<div class="mb-3">
+							<label for="productName" class="form-label">Nazwa</label>
+							<input type="text" class="form-control" id="productName" readonly>
+						</div>
+
+						<div class="mb-3">
+							<label for="productDescription" class="form-label">Opis</label>
+							<textarea class="form-control" id="productDescription" rows="3" readonly></textarea>
+						</div>
+									<div class="mb-3">
+                            <label for="productPrice" class="form-label">Cena</label>
+                            <input type="number" class="form-control" id="productPrice" step="0.01" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="productWeight" class="form-label">Waga</label>
+                            <input type="number" class="form-control" id="productWeight" step="0.01" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="productCategory" class="form-label">Kategoria</label>
+                            <select class="form-select" id="productCategory" required>
+                                <option value="1">Elektronika</option>
+                                <option value="2">Meble</option>
+                                <option value="3">Odzież</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Zapisz zmiany</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+	
+	<div class="modal fade" id="editDescriptionModal" tabindex="-1" aria-labelledby="editDescriptionModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="editDescriptionModalLabel">Edytuj opis produktu</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div class="modal-body">
+					<textarea id="descriptionTextArea" class="form-control" rows="6"></textarea>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
+					<button type="button" class="btn btn-primary" id="saveDescriptionButton">Zapisz zmiany</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- <script src="productsTable.js"></script> -->
+    <script src="js/cart.js"></script>
+    <script>
+        console.log("cos234");
+    </script>
+	<script>
+        function editProduct(id) {
+			const modal = new bootstrap.Modal(document.getElementById('editProductModal'));
+            modal.show();
+			
+			fetch(`/products/${id}`)
+				.then(response => response.json())
+				.then(data => {
+					document.getElementById('productName').value = data.nazwa;
+					document.getElementById('productDescription').value = data.opis;
+					document.getElementById('productPrice').value = data.cena_jednostkowa;
+					document.getElementById('productWeight').value = data.waga_jednostkowa;
+					document.getElementById('productCategory').value = data.id_kategorii;
+					document.getElementById('editProductForm').onsubmit = function(e) {
+						e.preventDefault();
+						const price = parseFloat(document.getElementById('productPrice').value);
+						const weight = parseFloat(document.getElementById('productWeight').value);
+
+						if (isNaN(price) || price <= 0) {
+							alert('Cena musi być liczbą większą niż zero.');
+							return;
+						}
+
+						if (isNaN(weight) || weight <= 0) {
+							alert('Waga musi być liczbą większą niż zero.');
+							return;
+						}
+
+						const updatedProduct = {
+							nazwa: data.nazwa,
+							opis: data.opis,
+							cena_jednostkowa: price,
+							waga_jednostkowa: weight,
+							id_kategorii: parseInt(document.getElementById('productCategory').value)
+						};
+						fetch(`/products/${id}`, {
+							method: 'PUT',
+							headers: {
+								'Content-Type': 'application/json',
+							},
+							body: JSON.stringify(updatedProduct),
+						})
+							.then(response => response.json())
+							.then(data => {
+								modal.hide();
+								alert('Produkt zaktualizowany');
+								window.location.reload();
+							})
+							.catch(error => console.error('Błąd:', error));
+					};
+				})
+				.catch(error => console.error('Błąd:', error));
+		}
+    </script>
+	
+	<!-- <script>
+		window.onload = function() {
+			fetchAndDisplayOrders();
+		}
+	</script> -->
+
+	<script>
+			
+		//   async function fetchAndDisplayOrders() {
+		//   console.log("Funkcja została wywołana");
+		// 		try {
+		// 			const [ordersResponse, statusResponse] = await Promise.all([
+		// 				fetch('/orders'),
+		// 				fetch('/status')
+		// 			]);
+
+		// 			if (!ordersResponse.ok || !statusResponse.ok) {
+		// 				throw new Error('Błąd podczas pobierania danych z serwera.');
+		// 			}
+
+		// 			const orders = await ordersResponse.json();
+		// 			const statuses = await statusResponse.json();
+
+		// 			const niezrealizowaneStatus = statuses.find(status => status.nazwa === "NIEZREALIZOWANE");
+		// 			const ordersWithStatuses = await Promise.all(orders
+		// 				.filter(order => order.id_stanu === niezrealizowaneStatus?.id_stanu)
+		// 				.map(async (order) => {
+		// 					console.log(order.orderItems)
+		// 					let totalValue = 0;
+		// 					const orderItems = order.orderItems;
+		// 					if (order.orderItems && order.orderItems.length > 0) {
+		// 						for (const orderItem of order.orderItems) {
+		// 							const product = await getProductById(orderItem.id);
+		// 							totalValue += product.cena_jednostkowa * orderItem.liczba_sztuk;
+		// 						}
+		// 					}
+							
+		// 					return {
+		// 						...order,
+		// 						statusName: niezrealizowaneStatus?.nazwa || 'Nieznany status',
+		// 						formattedDate: order.data_zatwierdzenia ? new Date(order.data_zatwierdzenia).toLocaleString('pl-PL') : 'Brak',
+		// 						totalValue: totalValue
+		// 					};
+		// 				})
+		// 			);
+		// 			const ordersContainer = document.getElementById('pendingOrdersTable');
+		// 			ordersContainer.innerHTML = ordersWithStatuses.map(order => `
+		// 				<tr>
+		// 					<td>${order.formattedDate}</td>
+		// 					<td>${order.totalValue || 'Nieznana'} PLN</td>
+		// 					<td>
+		// 						<ul>
+		// 							${order.items?.map(item => `
+		// 								<li>${item.productName} (Ilość: ${item.quantity})</li>
+		// 							`).join('') || '<li>Brak pozycji zamówienia</li>'}
+		// 						</ul>
+		// 					</td>
+		// 					<td>
+		// 						<button class="btn btn-success" onclick="updateOrderStatus(${order.id}, 'ZREALIZOWANE')">Zrealizowane</button>
+		// 						<button class="btn btn-danger" onclick="updateOrderStatus(${order.id}, 'ANULOWANE')">Anulowane</button>
+		// 					 </td>
+		// 				</tr>
+		// 			`).join('');
+
+		// 		} catch (error) {
+		// 			console.error('Błąd podczas przetwarzania zamówień:', error);
+		// 			// alert('Wystąpił błąd podczas wyświetlania zamówień.');
+		// 		}
+				
+		// 	}
+			
+	</script>
+	
+	<script>
+		async function optimizeDescription(productId) {
+    try {
+        const seoResponse = await fetch(`/products/${productId}/seo-description`);
+        const seoData = await seoResponse.json();
+
+        if (seoResponse.ok && seoData.seoDescription) {
+            const plainTextDescription = seoData.seoDescription.replace(/<[^>]+>/g, '');
+
+            const descriptionTextArea = document.getElementById("descriptionTextArea");
+            descriptionTextArea.value = plainTextDescription;
+
+            const modal = new bootstrap.Modal(document.getElementById('editDescriptionModal'));
+            modal.show();
+
+            document.getElementById('saveDescriptionButton').addEventListener('click', async () => {
+                const editedDescription = descriptionTextArea.value;
+
+                const productResponse = await fetch(`/products/${productId}`);
+                const productData = await productResponse.json();
+
+                if (productResponse.ok) {
+                    const updateResponse = await fetch(`/products/${productId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            nazwa: productData.nazwa,
+                            opis: editedDescription,
+                            cena_jednostkowa: productData.cena_jednostkowa,
+                            waga_jednostkowa: productData.waga_jednostkowa,
+                            id_kategorii: productData.id_kategorii
+                        })
+                    });
+
+                    if (updateResponse.ok) {
+                        alert('Opis został zoptymalizowany i zapisany!');
+                        modal.hide();
+                        location.reload();
+                    } else {
+                        alert('Nie udało się zapisać zoptymalizowanego opisu.');
+                    }
+                } else {
+                    alert('Nie udało się pobrać danych produktu.');
+                }
+            });
+        } else {
+            alert('Nie udało się wygenerować zoptymalizowanego opisu.');
+        }
+    } catch (error) {
+        console.error('Błąd:', error);
+        alert('Wystąpił błąd podczas optymalizacji opisu.');
+    }
+}
+	</script>
+	
+	<script>
+		function initializeDatabase() {
+			const fileInput = document.getElementById('fileInput');
+			const file = fileInput.files[0];
+			
+			if (!file) {
+				alert("Proszę wybrać plik.");
+				return;
+			}
+			
+			const reader = new FileReader();
+			
+			reader.onload = function(event) {
+				try {
+					const initData = JSON.parse(event.target.result);
+					
+					if (!validateInitData(initData)) {
+						return;
+					}
+
+					fetch('/init', {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+						},
+						body: JSON.stringify(initData),
+					})
+					.then(response => response.json())
+					.then(data => {
+						if (data.error) {
+							alert('Błąd: ' + data.error);
+						} else {
+							alert(data.message);
+							location.reload();
+						}
+					})
+					.catch(error => {
+						alert('Wystąpił błąd: ' + error);
+					});
+
+				} catch (error) {
+					alert('Błąd przy odczycie pliku JSON: ' + error.message);
+				}
+			};
+			
+			reader.readAsText(file);
+		}
+
+		function validateInitData(initData) {
+			if (!initData || !Array.isArray(initData.products)) {
+				alert("Nieprawidłowy format danych: Brak tablicy produktów.");
+				return false;
+			}
+
+			for (let i = 0; i < initData.products.length; i++) {
+				const produkt = initData.products[i];
+				if (typeof produkt.nazwa !== "string" || produkt.nazwa.trim() === "") {
+					alert(`Produkt #${i + 1}: Nazwa musi być tekstem i nie może być pusta.`);
+					return false;
+				}
+				if (typeof produkt.opis !== "string" || produkt.opis.trim() === "") {
+					alert(`Produkt #${i + 1}: Opis musi być tekstem i nie może być pusty.`);
+					return false;
+				}
+				if (typeof produkt.cena_jednostkowa !== "number" || produkt.cena_jednostkowa <= 0) {
+					alert(`Produkt #${i + 1}: Cena jednostkowa musi być liczbą większą od zera.`);
+					return false;
+				}
+				if (typeof produkt.waga_jednostkowa !== "number" || produkt.waga_jednostkowa <= 0) {
+					alert(`Produkt #${i + 1}: Waga jednostkowa musi być liczbą większą od zera.`);
+					return false;
+				}
+				if (typeof produkt.id_kategorii !== "number" || produkt.id_kategorii <= 0) {
+					alert(`Produkt #${i + 1}: ID kategorii musi być liczbą większą od zera.`);
+					return false;
+				}
+			}
+
+			return true;
+		}
+	</script>
+	
+	<script src="js/filterProducts.js"></script>
+	
+</body>
+</html>

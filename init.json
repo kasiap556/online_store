@@ -1,0 +1,26 @@
+{
+	"products": 
+	[
+		{
+			"nazwa": "BMX-500",
+			"opis": "Oryginalny rower Pana Pawła, historyczny",
+			"cena_jednostkowa": 2199.99,
+			"waga_jednostkowa": 16.4,
+			"id_kategorii": 3
+		},
+		{
+			"nazwa": "R6Turbo",
+			"opis": "Polaczenie ergonomii z elegancja",
+			"cena_jednostkowa": 7879.00,
+			"waga_jednostkowa": 12.2,
+			"id_kategorii": 3
+		},
+		{
+			"nazwa": "LWX",
+			"opis": "Lekka rama dla pan",
+			"cena_jednostkowa": 1799.99,
+			"waga_jednostkowa": 4.4,
+			"id_kategorii": 3
+		}
+	]
+}
